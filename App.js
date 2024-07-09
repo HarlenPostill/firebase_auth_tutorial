@@ -1,27 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-native';
-import { initializeApp } from '@firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from '@firebase/auth';
-
+import { initializeApp } from 'firebase/app';
+import { getAuth, initializeAuth, getReactNativePersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-  apiKey: "YOUR - apiKey",
-  authDomain: "YOUR - authDomain",
-  projectId: "YOUR - projectId",
-  storageBucket: "YOUR - storageBucket",
-  messagingSenderId: "YOUR - messagingSenderId",
-  appId: "YOUR - appId",
-  measurementId: "YOUR - measurementId"
+  apiKey: "AIzaSyC_7bnsqIIt_RJip_uE784KDlIskYoBH4s",
+  authDomain: "bananagrams-39ae5.firebaseapp.com",
+  projectId: "bananagrams-39ae5",
+  storageBucket: "bananagrams-39ae5.appspot.com",
+  messagingSenderId: "743232482238",
+  appId: "1:743232482238:web:70dd19888208d247df67ef",
+  measurementId: "G-162JFPPTQB"
 };
 
 const app = initializeApp(firebaseConfig);
 
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+});
+
 const AuthScreen = ({ email, setEmail, password, setPassword, isLogin, setIsLogin, handleAuthentication }) => {
   return (
     <View style={styles.authContainer}>
-       <Text style={styles.title}>{isLogin ? 'Sign In' : 'Sign Up'}</Text>
+      <Text style={styles.title}>{isLogin ? 'Sign In' : 'Sign Up'}</Text>
 
-       <TextInput
+      <TextInput
         style={styles.input}
         value={email}
         onChangeText={setEmail}
@@ -48,7 +52,6 @@ const AuthScreen = ({ email, setEmail, password, setPassword, isLogin, setIsLogi
   );
 }
 
-
 const AuthenticatedScreen = ({ user, handleAuthentication }) => {
   return (
     <View style={styles.authContainer}>
@@ -58,36 +61,31 @@ const AuthenticatedScreen = ({ user, handleAuthentication }) => {
     </View>
   );
 };
-export default App = () => {
+
+const App = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [user, setUser] = useState(null); // Track user authentication state
+  const [user, setUser] = useState(null);
   const [isLogin, setIsLogin] = useState(true);
 
-  const auth = getAuth(app);
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
     });
 
     return () => unsubscribe();
-  }, [auth]);
+  }, []);
 
-  
   const handleAuthentication = async () => {
     try {
       if (user) {
-        // If user is already authenticated, log out
         console.log('User logged out successfully!');
         await signOut(auth);
       } else {
-        // Sign in or sign up
         if (isLogin) {
-          // Sign in
           await signInWithEmailAndPassword(auth, email, password);
           console.log('User signed in successfully!');
         } else {
-          // Sign up
           await createUserWithEmailAndPassword(auth, email, password);
           console.log('User created successfully!');
         }
@@ -100,10 +98,8 @@ export default App = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {user ? (
-        // Show user's email if user is authenticated
         <AuthenticatedScreen user={user} handleAuthentication={handleAuthentication} />
       ) : (
-        // Show sign-in or sign-up form if user is not authenticated
         <AuthScreen
           email={email}
           setEmail={setEmail}
@@ -117,6 +113,9 @@ export default App = () => {
     </ScrollView>
   );
 }
+
+export default App;
+
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
